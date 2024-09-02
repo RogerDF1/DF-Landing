@@ -15,17 +15,9 @@ import { ArrowRight, ChevronRight, UserIcon, Zap } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { SparklesCore } from "@/components/ui/sparkles";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+
 
 const HomePage = () => {
-
-    const data = [
-        { id: 1, name: "Emma Thompson", email: "emma@example.com", role: "Designer", status: "Active" },
-        { id: 2, name: "Liam Wilson", email: "liam@example.com", role: "Developer", status: "Inactive" },
-        { id: 3, name: "Olivia Martinez", email: "olivia@example.com", role: "Manager", status: "Active" },
-        { id: 4, name: "Noah Anderson", email: "noah@example.com", role: "Developer", status: "Active" },
-        { id: 5, name: "Ava Johnson", email: "ava@example.com", role: "Designer", status: "Inactive" },
-    ]
     return (
         <section className="w-full relative flex flex-col items-center justify-center px-4 md:px-0 py-8">
             {/* Hero */}
