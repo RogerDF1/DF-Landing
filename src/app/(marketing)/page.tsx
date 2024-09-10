@@ -47,7 +47,7 @@ const HomePage = () => {
                                 Sin complicaciones, todo en tiempo real a solo un par de clicks, con graficas y resumenes de las actividades
                             </p>
                             <div className="hidden md:flex relative items-center justify-center mt-8 md:mt-12 w-full">
-                                <Link href="#" className="flex items-center justify-center w-max rounded-full border-t border-foreground/30 bg-white/20 backdrop-blur-lg px-2 py-1 md:py-2 gap-2 md:gap-8 shadow-3xl shadow-background/40 cursor-pointer select-none">
+                                <Link href="/trello" className="flex items-center justify-center w-max rounded-full border-t border-foreground/30 bg-white/20 backdrop-blur-lg px-2 py-1 md:py-2 gap-2 md:gap-8 shadow-3xl shadow-background/40 cursor-pointer select-none">
                                     <p className="text-foreground text-sm text-center md:text-base font-medium pl-4 pr-4 lg:pr-0">
                                         ✨ {"  "} Empieza a ver el rendimiento de tu equipo
                                     </p>
@@ -206,12 +206,14 @@ const HomePage = () => {
                 <div className="flex flex-col items-center justify-center py-[-100px] w-full">
                     <div className="flex justify-center w-full">
                         <div className="flex flex-row items-center space-x-4">
-                            <button className="p-[3px] relative">
-                                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg" />
-                                <div className="px-8 py-2 bg-black rounded-[6px] relative group transition duration-200 text-white hover:bg-transparent">
-                                    Trello
-                                </div>
-                            </button>
+                            <Link href="/trello">
+                                <button className="p-[3px] relative">
+                                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg" />
+                                    <div className="px-8 py-2 bg-black rounded-[6px] relative group transition duration-200 text-white hover:bg-transparent">
+                                        Trello
+                                    </div>
+                                </button>
+                            </Link>
                             <button className="inline-flex h-12 animate-shimmer items-center justify-center rounded-md border border-slate-800 bg-[linear-gradient(110deg,#000103,45%,#1e2631,55%,#000103)] bg-[length:200%_100%] px-6 font-medium text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50">
                                 Google Workspace
                             </button>
