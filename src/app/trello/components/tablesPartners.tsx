@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 
 const apiKey = process.env.NEXT_PUBLIC_TRELLO_API || '';
@@ -34,19 +34,19 @@ const TablesPartners: React.FC<TablesPartnersProps> = ({ sprintNumber }) => {
   const [cards, setCards] = useState<ProcessedCard[]>([]);
   const [customFields, setCustomFields] = useState<CustomFieldData[]>([]);
 
-  const fetchCustomFields = async () => {
+  const fetchCustomFields = useCallback(async () => {
     try {
       const response = await axios.get(
         `https://api.trello.com/1/boards/${boardId}/customFields?key=${apiKey}&token=${apiToken}`
       );
       setCustomFields(response.data);
-      console.log("Campos personalizados:", response.data);
+      
     } catch (error) {
       console.error("Error fetching custom fields:", error);
     }
-  };
+  }, []);
 
-  const fetchCards = async () => {
+  const fetchCards = useCallback(async () => {
     try {
       const response = await axios.get(
         `https://api.trello.com/1/boards/${boardId}/cards?key=${apiKey}&token=${apiToken}&customFieldItems=true`
@@ -106,37 +106,34 @@ const TablesPartners: React.FC<TablesPartnersProps> = ({ sprintNumber }) => {
       });
 
       setCards(processedCards);
-      console.log("Tarjetas procesadas:", processedCards);
     } catch (error) {
       console.error("Error fetching cards from Trello:", error);
     }
-  };
+  }, [customFields]);
 
   useEffect(() => {
     fetchCustomFields().then(fetchCards);
-  }, [sprintNumber]);
+  }, [fetchCustomFields, fetchCards, sprintNumber]);
 
-  const filteredCards = cards.filter(card => card.idSprint === sprintNumber);
+  const filteredCards = useMemo(() => cards.filter(card => card.idSprint === sprintNumber), [cards, sprintNumber]);
 
-  const calculateTotals = () => {
+  const totals = useMemo(() => {
     const totals: {[key: string]: {horas1: number, horas2: number, horas3: number, total: number}} = {};
     filteredCards.forEach(card => {
       ['participante1', 'participante2', 'participante3'].forEach((participante, index) => {
         const nombre = card[participante as keyof ProcessedCard];
         const horas = parseFloat(card[`horasParticipante${index + 1}` as keyof ProcessedCard].toString()) || 0;
-        if (nombre && horas) {
+        if (typeof nombre === 'string' && horas) {
           if (!totals[nombre]) {
             totals[nombre] = { horas1: 0, horas2: 0, horas3: 0, total: 0 };
           }
-          totals[nombre][`horas${index + 1}` as keyof typeof totals[nombre]] += horas;
+          totals[nombre][`horas${index + 1}` as 'horas1' | 'horas2' | 'horas3'] += horas;
           totals[nombre].total += horas;
         }
       });
     });
     return totals;
-  };
-
-  const totals = calculateTotals();
+  }, [filteredCards]);
 
   return (
     <div className="!z-5 relative flex flex-col rounded-[20px] bg-navy-800 text-white w-full h-full sm:overflow-auto px-6">
@@ -165,8 +162,8 @@ const TablesPartners: React.FC<TablesPartnersProps> = ({ sprintNumber }) => {
             </tr>
           </thead>
           <tbody role="rowgroup">
-            {Object.entries(totals).map(([nombre, { horas1, horas2, horas3, total }]) => (
-              <tr role="row" key={nombre}>
+            {Object.entries(totals).map(([nombre, { horas1, horas2, horas3, total }], index) => (
+              <tr role="row" key={`${nombre}-${index}`}>
                 <td role="cell" className="pt-[14px] pb-[16px] sm:text-[14px] font-bold">{nombre}</td>
                 <td role="cell" className="pt-[14px] pb-[16px] sm:text-[14px]">{horas1.toFixed(2)}</td>
                 <td role="cell" className="pt-[14px] pb-[16px] sm:text-[14px]">{horas2.toFixed(2)}</td>

@@ -30,9 +30,7 @@ interface ProcessedCard {
 const TablesHours: React.FC<TablesHoursProps> = ({ sprintNumber }) => {
   const [cards, setCards] = useState<ProcessedCard[]>([]);
   const [customFields, setCustomFields] = useState<CustomFieldData[]>([]);
-  const [totals, setTotals] = useState<{ [key: string]: { tarjetas1: number, tarjetas2: number, tarjetas3: number, total: number } }>({});
 
-  // Función para obtener los campos personalizados desde Trello
   const fetchCustomFields = async () => {
     try {
       const response = await axios.get(
@@ -40,17 +38,16 @@ const TablesHours: React.FC<TablesHoursProps> = ({ sprintNumber }) => {
       );
       setCustomFields(response.data);
     } catch (error) {
-      console.error("Error fetching custom fields:", error);
+      console.error('Error fetching custom fields:', error);
     }
   };
 
-  // Función para obtener las tarjetas desde Trello
   const fetchCards = async () => {
     try {
       const response = await axios.get(
         `https://api.trello.com/1/boards/${boardId}/cards?key=${apiKey}&token=${apiToken}&customFieldItems=true`
       );
-      
+
       const processedCards: ProcessedCard[] = response.data.map((card: any) => {
         const processedCard: ProcessedCard = {
           id: card.id,
@@ -63,11 +60,10 @@ const TablesHours: React.FC<TablesHoursProps> = ({ sprintNumber }) => {
           participante3: '',
         };
 
-        // Procesar campos personalizados
         card.customFieldItems.forEach((item: any) => {
           const field = customFields.find(cf => cf.id === item.idCustomField);
           if (field) {
-            switch(field.name) {
+            switch (field.name) {
               case 'ID Sprint':
                 processedCard.idSprint = item.value?.number?.toString() || '';
                 break;
@@ -89,11 +85,10 @@ const TablesHours: React.FC<TablesHoursProps> = ({ sprintNumber }) => {
 
       setCards(processedCards);
     } catch (error) {
-      console.error("Error fetching cards from Trello:", error);
+      console.error('Error fetching cards from Trello:', error);
     }
   };
 
-  // Calcular la cantidad de tarjetas por cada participante
   const calculateTotals = () => {
     const totals: { [key: string]: { tarjetas1: number, tarjetas2: number, tarjetas3: number, total: number } } = {};
     cards.filter(card => card.idSprint === sprintNumber).forEach(card => {
@@ -103,23 +98,19 @@ const TablesHours: React.FC<TablesHoursProps> = ({ sprintNumber }) => {
           if (!totals[nombre]) {
             totals[nombre] = { tarjetas1: 0, tarjetas2: 0, tarjetas3: 0, total: 0 };
           }
-          totals[nombre][`tarjetas${index + 1}` as keyof typeof totals[nombre]] += 1; // Incrementa la tarjeta para cada participante
+          totals[nombre][`tarjetas${index + 1}` as 'tarjetas1' | 'tarjetas2' | 'tarjetas3'] += 1;
           totals[nombre].total += 1;
         }
       });
     });
-    setTotals(totals);
+    return totals;
   };
+
+  const totals = calculateTotals();
 
   useEffect(() => {
     fetchCustomFields().then(fetchCards);
-  }, [sprintNumber]);
-
-  useEffect(() => {
-    if (cards.length > 0) {
-      calculateTotals();
-    }
-  }, [cards]);
+  }, [fetchCards, sprintNumber]); // Incluye fetchCards como dependencia
 
   return (
     <div className="!z-5 relative flex flex-col rounded-[20px] bg-navy-800 text-white w-full h-full sm:overflow-auto px-6">
@@ -148,8 +139,8 @@ const TablesHours: React.FC<TablesHoursProps> = ({ sprintNumber }) => {
             </tr>
           </thead>
           <tbody role="rowgroup">
-            {Object.entries(totals).map(([nombre, { tarjetas1, tarjetas2, tarjetas3, total }]) => (
-              <tr role="row" key={nombre}>
+            {Object.entries(totals).map(([nombre, { tarjetas1, tarjetas2, tarjetas3, total }], index) => (
+              <tr role="row" key={`${nombre}-${index}`}>
                 <td role="cell" className="pt-[14px] pb-[16px] sm:text-[14px] font-bold">{nombre}</td>
                 <td role="cell" className="pt-[14px] pb-[16px] sm:text-[14px]">{tarjetas1}</td>
                 <td role="cell" className="pt-[14px] pb-[16px] sm:text-[14px]">{tarjetas2}</td>

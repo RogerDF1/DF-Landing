@@ -61,17 +61,17 @@ const SearchBar: React.FC<SearchBarProps> = ({ setSelectedSprint }) => {
 
   return (
     <div className="relative">
-      <h3 className="text-lg font-bold text-white">Filtrar por "ID Sprint"</h3>
+<h3 className="text-lg font-bold text-white">Filtrar por &quot;ID Sprint&quot;</h3>
 
       {sprintValues.length > 0 && (
         <div>
           {/* Dropdown para seleccionar el Sprint */}
           <select
-            onChange={(e) => setSelectedSprint(e.target.value || null)} // Pasamos el valor seleccionado al componente padre
+            onChange={(e) => setSelectedSprint(e.target.value || null)}
             className="bg-gray-800 text-white p-2 rounded"
           >
             <option value="">Mostrar todos los Sprints</option>
-            {[...new Set(sprintValues.map((sprint) => sprint.sprintValue))].map((sprintId) => (
+            {Array.from(new Set(sprintValues.map((sprint) => sprint.sprintValue))).map((sprintId) => (
               <option key={sprintId} value={sprintId}>
                 Sprint {sprintId}
               </option>

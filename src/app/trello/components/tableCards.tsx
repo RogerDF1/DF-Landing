@@ -66,12 +66,12 @@ const TablesCards = () => {
             )}
 
             {listsData.length > 0 ? (
-              listsData.map((list: any) => {
+              listsData.map((list: any, index: number) => {
                 const cardCount = list.cards.length;
                 const percentage = ((cardCount / totalCards) * 100).toFixed(2); // Calcular el porcentaje
 
                 return (
-                  <tr key={list.id} role="row">
+                  <tr key={`${list.id}-${index}`} role="row">
                     <td role="cell" className="pt-[14px] pb-[16px] sm:text-[14px]">
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-bold text-white">{list.name}</p>

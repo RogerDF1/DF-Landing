@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import { Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
@@ -38,24 +38,23 @@ const TablesPartners: React.FC<TablesPartnersProps> = ({ sprintNumber }) => {
   const [cards, setCards] = useState<ProcessedCard[]>([]);
   const [customFields, setCustomFields] = useState<CustomFieldData[]>([]);
 
-  const fetchCustomFields = async () => {
+  const fetchCustomFields = useCallback(async () => {
     try {
       const response = await axios.get(
         `https://api.trello.com/1/boards/${boardId}/customFields?key=${apiKey}&token=${apiToken}`
       );
       setCustomFields(response.data);
-      console.log("Campos personalizados:", response.data);
     } catch (error) {
       console.error("Error fetching custom fields:", error);
     }
-  };
+  }, []); // Sin dependencias
 
-  const fetchCards = async () => {
+  const fetchCards = useCallback(async () => {
     try {
       const response = await axios.get(
         `https://api.trello.com/1/boards/${boardId}/cards?key=${apiKey}&token=${apiToken}&customFieldItems=true`
       );
-      
+
       const processedCards: ProcessedCard[] = response.data.map((card: any) => {
         const processedCard: ProcessedCard = {
           id: card.id,
@@ -110,74 +109,70 @@ const TablesPartners: React.FC<TablesPartnersProps> = ({ sprintNumber }) => {
       });
 
       setCards(processedCards);
-      console.log("Tarjetas procesadas:", processedCards);
     } catch (error) {
       console.error("Error fetching cards from Trello:", error);
     }
-  };
+  }, [customFields]);
 
   useEffect(() => {
     fetchCustomFields().then(fetchCards);
-  }, [sprintNumber]);
+  }, [fetchCustomFields, fetchCards, sprintNumber]);
 
-  const filteredCards = cards.filter(card => card.idSprint === sprintNumber);
+  const filteredCards = useMemo(() => cards.filter(card => card.idSprint === sprintNumber), [cards, sprintNumber]);
 
-  const calculateTotals = () => {
+  const totals = useMemo(() => {
     const totals: {[key: string]: {horas1: number, horas2: number, horas3: number, total: number}} = {};
+    
     filteredCards.forEach(card => {
       ['participante1', 'participante2', 'participante3'].forEach((participante, index) => {
         const nombre = card[participante as keyof ProcessedCard];
         const horas = parseFloat(card[`horasParticipante${index + 1}` as keyof ProcessedCard].toString()) || 0;
-        if (nombre && horas) {
+        
+        if (typeof nombre === 'string' && horas) {
           if (!totals[nombre]) {
             totals[nombre] = { horas1: 0, horas2: 0, horas3: 0, total: 0 };
           }
-          totals[nombre][`horas${index + 1}` as keyof typeof totals[nombre]] += horas;
+          totals[nombre][`horas${index + 1}` as 'horas1' | 'horas2' | 'horas3'] += horas;
           totals[nombre].total += horas;
         }
       });
     });
+  
     return totals;
-  };
+  }, [filteredCards]);
 
-  const totals = calculateTotals();
-
-  // Datos para el gráfico
-  const pieData = {
+  const pieData = useMemo(() => ({
     labels: Object.keys(totals),
     datasets: [
-        {
-          label: 'Horas',
-          data: Object.values(totals).map(total => total.total), // Número de tarjetas en cada lista
-          backgroundColor: [
-            'rgba(255, 99, 132, 0.2)',
-            'rgba(54, 162, 235, 0.2)',
-            'rgba(255, 206, 86, 0.2)',
-            'rgba(75, 192, 192, 0.2)',
-            'rgba(153, 102, 255, 0.2)',
-            'rgba(255, 159, 64, 0.2)',
-          ],
-          borderColor: [
-            'rgba(255, 99, 132, 1)',
-            'rgba(54, 162, 235, 1)',
-            'rgba(255, 206, 86, 1)',
-            'rgba(75, 192, 192, 1)',
-            'rgba(153, 102, 255, 1)',
-            'rgba(255, 159, 64, 1)',
-          ],
-          borderWidth: 1,
-        },
-      ],
-  };
-
-
+      {
+        label: 'Horas',
+        data: Object.values(totals).map(total => total.total),
+        backgroundColor: [
+          'rgba(255, 99, 132, 0.2)',
+          'rgba(54, 162, 235, 0.2)',
+          'rgba(255, 206, 86, 0.2)',
+          'rgba(75, 192, 192, 0.2)',
+          'rgba(153, 102, 255, 0.2)',
+          'rgba(255, 159, 64, 0.2)',
+        ],
+        borderColor: [
+          'rgba(255, 99, 132, 1)',
+          'rgba(54, 162, 235, 1)',
+          'rgba(255, 206, 86, 1)',
+          'rgba(75, 192, 192, 1)',
+          'rgba(153, 102, 255, 1)',
+          'rgba(255, 159, 64, 1)',
+        ],
+        borderWidth: 1,
+      },
+    ],
+  }), [totals]);
 
   return (
     <div className="!z-5 relative flex flex-col rounded-[20px] bg-navy-800 text-white w-full h-full sm:overflow-auto px-6">
       <header className="relative flex items-center justify-between pt-4">
         <div className="text-xl font-bold">Horas por Participante - Sprint {sprintNumber}</div>
       </header>
-
 
       {/* Gráfico circular */}
       <div className="mt-8">
