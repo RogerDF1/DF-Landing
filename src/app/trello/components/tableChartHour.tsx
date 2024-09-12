@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Tooltip, Legend } from 'chart.js';
+import { Pie } from 'react-chartjs-2';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 
-// Registrar los componentes necesarios de Chart.js para el gráfico de barras
-ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 const apiKey = process.env.NEXT_PUBLIC_TRELLO_API || '';
 const apiToken = process.env.NEXT_PUBLIC_TRELLO_TOKEN || '';
 const boardId = 'UTrQCeTP'; // ID del tablero de Trello
 
-type TablesHoursProps = {
+type TablesPartnersProps = {
   sprintNumber: string;
 };
 
@@ -28,33 +27,29 @@ interface ProcessedCard {
   idSprint: string;
   idCliente: string;
   participante1: string;
+  horasParticipante1: number;
   participante2: string;
+  horasParticipante2: number;
   participante3: string;
+  horasParticipante3: number;
 }
 
-// Definir la estructura esperada para el tipo de datos 'totals'
-interface Totals {
-  [key: string]: { tarjetas1: number, tarjetas2: number, tarjetas3: number, total: number };
-}
-
-const TablesHours: React.FC<TablesHoursProps> = ({ sprintNumber }) => {
+const TablesPartners: React.FC<TablesPartnersProps> = ({ sprintNumber }) => {
   const [cards, setCards] = useState<ProcessedCard[]>([]);
   const [customFields, setCustomFields] = useState<CustomFieldData[]>([]);
-  const [totals, setTotals] = useState<Totals>({});
 
-  // Función para obtener los campos personalizados desde Trello
   const fetchCustomFields = async () => {
     try {
       const response = await axios.get(
         `https://api.trello.com/1/boards/${boardId}/customFields?key=${apiKey}&token=${apiToken}`
       );
       setCustomFields(response.data);
+      console.log("Campos personalizados:", response.data);
     } catch (error) {
       console.error("Error fetching custom fields:", error);
     }
   };
 
-  // Función para obtener las tarjetas desde Trello
   const fetchCards = async () => {
     try {
       const response = await axios.get(
@@ -69,26 +64,43 @@ const TablesHours: React.FC<TablesHoursProps> = ({ sprintNumber }) => {
           idSprint: '',
           idCliente: '',
           participante1: '',
+          horasParticipante1: 0,
           participante2: '',
+          horasParticipante2: 0,
           participante3: '',
+          horasParticipante3: 0
         };
 
-        // Procesar campos personalizados
         card.customFieldItems.forEach((item: any) => {
           const field = customFields.find(cf => cf.id === item.idCustomField);
           if (field) {
             switch(field.name) {
+              case 'ID Proyecto':
+                processedCard.idProyecto = item.value?.text || '';
+                break;
               case 'ID Sprint':
                 processedCard.idSprint = item.value?.number?.toString() || '';
+                break;
+              case 'ID Cliente':
+                processedCard.idCliente = item.value?.text || '';
                 break;
               case 'Participante 1':
                 processedCard.participante1 = field.options?.find(opt => opt.id === item.idValue)?.value.text || '';
                 break;
+              case 'Horas Participante 1':
+                processedCard.horasParticipante1 = item.value?.number || 0;
+                break;
               case 'Participante 2':
                 processedCard.participante2 = field.options?.find(opt => opt.id === item.idValue)?.value.text || '';
                 break;
+              case 'Horas Participante 2':
+                processedCard.horasParticipante2 = item.value?.number || 0;
+                break;
               case 'Participante 3':
                 processedCard.participante3 = field.options?.find(opt => opt.id === item.idValue)?.value.text || '';
+                break;
+              case 'Horas Participante 3':
+                processedCard.horasParticipante3 = item.value?.number || 0;
                 break;
             }
           }
@@ -98,98 +110,81 @@ const TablesHours: React.FC<TablesHoursProps> = ({ sprintNumber }) => {
       });
 
       setCards(processedCards);
+      console.log("Tarjetas procesadas:", processedCards);
     } catch (error) {
       console.error("Error fetching cards from Trello:", error);
     }
-  };
-
-  // Calcular la cantidad de tarjetas por cada participante
-  const calculateTotals = () => {
-    const totals: Totals = {};
-    cards.filter(card => card.idSprint === sprintNumber).forEach(card => {
-      ['participante1', 'participante2', 'participante3'].forEach((participante, index) => {
-        const nombre = card[participante as keyof ProcessedCard];
-        if (nombre) {
-          if (!totals[nombre]) {
-            totals[nombre] = { tarjetas1: 0, tarjetas2: 0, tarjetas3: 0, total: 0 };
-          }
-          totals[nombre][`tarjetas${index + 1}` as keyof typeof totals[nombre]] += 1; // Incrementa la tarjeta para cada participante
-          totals[nombre].total += 1;
-        }
-      });
-    });
-    setTotals(totals);
   };
 
   useEffect(() => {
     fetchCustomFields().then(fetchCards);
   }, [sprintNumber]);
 
-  useEffect(() => {
-    if (cards.length > 0) {
-      calculateTotals();
-    }
-  }, [cards]);
+  const filteredCards = cards.filter(card => card.idSprint === sprintNumber);
 
-  // Datos para el gráfico de barras
-  const participants = Object.keys(totals);
-  const tarjetas = Object.values(totals).map(val => val.total); // Cantidad total de tarjetas por participante
-
-  const data = {
-    labels: participants, // Nombres de los participantes
-    datasets: [
-      {
-        label: "Tarjetas realizadas",
-        data: tarjetas, // Datos de las tarjetas
-        backgroundColor: [
-          "rgba(255, 99, 132, 0.2)",
-          "rgba(54, 162, 235, 0.2)",
-          "rgba(75, 192, 192, 0.2)",
-        ],
-        borderColor: [
-          "rgba(255, 99, 132, 1)",
-          "rgba(54, 162, 235, 1)",
-          "rgba(75, 192, 192, 1)",
-        ],
-        borderWidth: 1,
-      },
-    ],
-  };
-
-
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false, 
-    plugins: {
-      legend: {
-        position: 'top',
-      },
-      title: {
-        display: true,
-        text: 'Tarjetas realizadas por Participante',
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          stepSize: 1
+  const calculateTotals = () => {
+    const totals: {[key: string]: {horas1: number, horas2: number, horas3: number, total: number}} = {};
+    filteredCards.forEach(card => {
+      ['participante1', 'participante2', 'participante3'].forEach((participante, index) => {
+        const nombre = card[participante as keyof ProcessedCard];
+        const horas = parseFloat(card[`horasParticipante${index + 1}` as keyof ProcessedCard].toString()) || 0;
+        if (nombre && horas) {
+          if (!totals[nombre]) {
+            totals[nombre] = { horas1: 0, horas2: 0, horas3: 0, total: 0 };
+          }
+          totals[nombre][`horas${index + 1}` as keyof typeof totals[nombre]] += horas;
+          totals[nombre].total += horas;
         }
-      }
-    }
+      });
+    });
+    return totals;
   };
+
+  const totals = calculateTotals();
+
+  // Datos para el gráfico
+  const pieData = {
+    labels: Object.keys(totals),
+    datasets: [
+        {
+          label: 'Horas',
+          data: Object.values(totals).map(total => total.total), // Número de tarjetas en cada lista
+          backgroundColor: [
+            'rgba(255, 99, 132, 0.2)',
+            'rgba(54, 162, 235, 0.2)',
+            'rgba(255, 206, 86, 0.2)',
+            'rgba(75, 192, 192, 0.2)',
+            'rgba(153, 102, 255, 0.2)',
+            'rgba(255, 159, 64, 0.2)',
+          ],
+          borderColor: [
+            'rgba(255, 99, 132, 1)',
+            'rgba(54, 162, 235, 1)',
+            'rgba(255, 206, 86, 1)',
+            'rgba(75, 192, 192, 1)',
+            'rgba(153, 102, 255, 1)',
+            'rgba(255, 159, 64, 1)',
+          ],
+          borderWidth: 1,
+        },
+      ],
+  };
+
+
+
   return (
     <div className="!z-5 relative flex flex-col rounded-[20px] bg-navy-800 text-white w-full h-full sm:overflow-auto px-6">
       <header className="relative flex items-center justify-between pt-4">
-        <div className="text-xl font-bold">Tarjetas por Participante - Sprint {sprintNumber}</div>
+        <div className="text-xl font-bold">Horas por Participante - Sprint {sprintNumber}</div>
       </header>
 
 
-      <div className="mt-[5em]">
-        <Bar data={data} options={options} />
+      {/* Gráfico circular */}
+      <div className="mt-8">
+        <Pie data={pieData} />
       </div>
     </div>
   );
 };
 
-export default TablesHours;
+export default TablesPartners;

@@ -9,12 +9,12 @@ import TablesHours from "./components/tablesHours";
 import TablesPartners from "./components/tablesPartners";
 import { BackgroundBeams } from "@/components/ui/background-beams";
 import TableProyects from "./components/tableProyects";
-import GraficHours from "./components/graficHours";
 import BacklogChart from "./components/backlogChart";
-import SearchBar from './components/searchBar'; // Importa el componente SearchBar
+import SearchBar from './components/searchBar'; 
+import TableChartHour from './components/tableChartHour';
 
 const Trello = () => {
-  const [selectedSprint, setSelectedSprint] = useState<string | null>(null); // Estado para el sprint seleccionado
+  const [selectedSprint, setSelectedSprint] = useState<string | null>(null); 
 
   return (
     <div className="mr-[5em] mt-5 overflow-auto ml-[5em]">
@@ -24,34 +24,31 @@ const Trello = () => {
       <SearchBar setSelectedSprint={setSelectedSprint} />
       </div>
 
-
-
-      <div className="mt-5 mb-10">
-        {/* Pasa el sprintId seleccionado como prop al componente Card */}
-        <Card selectedSprint={selectedSprint} />
-      </div>
-
       <div className="grid grid-cols-1 sm:grid-cols-2 mt-10 gap-4">
-        <TablesHours />
+        <TablesHours sprintNumber={selectedSprint} />
         <TablesPartners sprintNumber={selectedSprint} />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 mt-10 gap-4">
         <TablesCards />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <TableChartPie />
-          <TableChartPie />
+          <TableChartHour sprintNumber={selectedSprint} />
+          <TableChartPie sprintNumber={selectedSprint} />
         </div>
       </div>
+{/*
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mt-10 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 mt-10 gap-6">
         <TableProyects />
-        <GraficHours />
         <BacklogChart />
       </div>
+*/}
+
 
       <Footer />
+
       <BackgroundBeams className="absolute inset-0 z-[-1] bg-gradient-to-b from-black to-neutral-900" />
+
     </div>
   );
 };
