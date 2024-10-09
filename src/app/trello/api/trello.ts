@@ -1,23 +1,21 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
 import axios from 'axios';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { boardId } = req.query; // ID del tablero desde el cliente
-  const apiKey = process.env.NEXT_PUBLIC_TRELLO_API;
-  const apiToken = process.env.NEXT_PUBLIC_TRELLO_TOKEN;
+const MAX_RETRIES = 3;
 
-  if (!boardId || !apiKey || !apiToken) {
-    return res.status(400).json({ error: 'Missing required parameters.' });
-  }
+export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-  try {
-    const response = await axios.get(
-      `https://api.trello.com/1/boards/${boardId}/lists?key=${apiKey}&token=${apiToken}`
-    );
-    
-    // Devolvemos los datos al cliente
-    res.status(200).json(response.data);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch data from Trello.' });
+export const fetchWithRetry = async (url: string, retries = MAX_RETRIES) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await axios.get(url);
+    } catch (error: any) {
+      if (error.response?.status === 429 && i < retries - 1) {
+        // Si obtenemos un error 429, esperamos antes de reintentar
+        await delay(1000 * (i + 1)); // Aumentar el retraso exponencialmente
+      } else {
+        throw error;
+      }
+    }
   }
-}
+  throw new Error('Max retries reached');
+};

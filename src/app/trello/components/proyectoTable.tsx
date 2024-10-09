@@ -46,8 +46,6 @@ const TablesHours: React.FC<TablesHoursProps> = ({ sprintNumber }) => {
       );
       setCustomFields(response.data);
 
-      // Imprimir todos los campos personalizados en la consola
-      console.log('Custom Fields:', response.data);
     } catch (error) {
       console.error('Error fetching custom fields:', error);
     }
@@ -86,8 +84,6 @@ const TablesHours: React.FC<TablesHoursProps> = ({ sprintNumber }) => {
         return processedCard;
       });
 
-      // Imprimir las tarjetas procesadas para depuración
-      console.log('Processed Cards:', processedCards);
 
       setCards(processedCards);
     } catch (error) {

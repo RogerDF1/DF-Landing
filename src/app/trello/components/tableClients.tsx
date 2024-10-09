@@ -10,6 +10,8 @@ const customFieldHorasParticipante1Id = '627d46063d42d4380dcb20c5'; // ID del ca
 const customFieldHorasParticipante2Id = '627d4718e6dfbf598a6a0748'; // ID del campo personalizado "Horas Participante 2"
 const customFieldHorasParticipante3Id = '63bda80ea9e47a01f16b4a7b'; // ID del campo personalizado "Horas Participante 3"
 
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 type TablesHoursProps = {
   sprintNumber: string;
 };
@@ -41,13 +43,12 @@ const TablesHours: React.FC<TablesHoursProps> = ({ sprintNumber }) => {
 
   const fetchCustomFields = async () => {
     try {
+      await delay(200); // Añadir un retraso para evitar demasiadas peticiones
       const response = await axios.get(
         `https://api.trello.com/1/boards/${boardId}/customFields?key=${apiKey}&token=${apiToken}`
       );
       setCustomFields(response.data);
 
-      // Imprimir todos los campos personalizados en la consola
-      console.log('Custom Fields:', response.data);
     } catch (error) {
       console.error('Error fetching custom fields:', error);
     }
@@ -55,6 +56,7 @@ const TablesHours: React.FC<TablesHoursProps> = ({ sprintNumber }) => {
 
   const fetchCards = async () => {
     try {
+      await delay(200); // Añadir un retraso para evitar demasiadas peticiones
       const response = await axios.get(
         `https://api.trello.com/1/boards/${boardId}/cards?key=${apiKey}&token=${apiToken}&customFieldItems=true`
       );
@@ -80,16 +82,12 @@ const TablesHours: React.FC<TablesHoursProps> = ({ sprintNumber }) => {
             if (horasValue) {
               processedCard.horas += parseFloat(horasValue);
             }
-            // Imprimir el valor de horas para depuración
-            console.log(`Card ID: ${card.id}, Horas Value (${item.idCustomField}):`, horasValue);
+            
           }
         });
 
         return processedCard;
       });
-
-      // Imprimir las tarjetas procesadas para depuración
-      console.log('Processed Cards:', processedCards);
 
       setCards(processedCards);
     } catch (error) {
@@ -98,22 +96,27 @@ const TablesHours: React.FC<TablesHoursProps> = ({ sprintNumber }) => {
   };
 
   const fetchClients = async () => {
-    // Simulating fetching client data from another source (e.g., a database or a file)
-    const clientsData: ClientData[] = [
-      { id: '1', name: 'Digital Family' },
-      { id: '3', name: 'Aprende Zapopan' },
-      { id: '7', name: 'Colegio Ingles Hidalgo' },
-      { id: '8', name: 'Colegio Reims' },
-      { id: '9', name: 'Consultoría Educativa AIDEI' },
-      { id: '13', name: 'Escuela Miguel Hidalgo' },
-      { id: '20', name: 'Secretaría de Educación del Estado de Colima' },
-      { id: '29', name: 'Villa Educativa S.C.' },
-      { id: '34', name: 'Colegio Marcelina' },
-      { id: '36', name: 'Bluetopia' },
-      { id: '37', name: 'Fundación Bring' },
-      { id: '38', name: 'Escuela Normal' },
-    ];
-    setClients(clientsData);
+    try {
+      await delay(200); // Añadir un retraso para evitar demasiadas peticiones
+      // Simulating fetching client data from another source (e.g., a database or a file)
+      const clientsData: ClientData[] = [
+        { id: '1', name: 'Digital Family' },
+        { id: '3', name: 'Aprende Zapopan' },
+        { id: '7', name: 'Colegio Ingles Hidalgo' },
+        { id: '8', name: 'Colegio Reims' },
+        { id: '9', name: 'Consultoría Educativa AIDEI' },
+        { id: '13', name: 'Escuela Miguel Hidalgo' },
+        { id: '20', name: 'Secretaría de Educación del Estado de Colima' },
+        { id: '29', name: 'Villa Educativa S.C.' },
+        { id: '34', name: 'Colegio Marcelina' },
+        { id: '36', name: 'Bluetopia' },
+        { id: '37', name: 'Fundación Bring' },
+        { id: '38', name: 'Escuela Normal' },
+      ];
+      setClients(clientsData);
+    } catch (error) {
+      console.error('Error fetching clients:', error);
+    }
   };
 
   const calculateTotals = () => {

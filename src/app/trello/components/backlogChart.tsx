@@ -1,3 +1,6 @@
+import { fetchWithRetry } from './../api/trello'
+
+
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Pie } from 'react-chartjs-2';
