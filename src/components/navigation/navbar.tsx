@@ -47,11 +47,6 @@ const Navbar = async () => {
                   </span>
                 </button>
               </Link>
-              <Link href="/sign-up">
-                <button className={buttonVariants({size: "sm", variant: "ghost"})}>
-                  Inicia con Digital Family
-                </button>
-              </Link>
             </>
           )}
         </div>

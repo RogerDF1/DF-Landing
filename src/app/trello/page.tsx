@@ -8,6 +8,8 @@ import TablesHours from "./components/tablesHours";
 import TablesPartners from "./components/tablesPartners";
 import SearchBar from './components/searchBar'; 
 import TableChartHour from './components/tableChartHour';
+import ProyectoTable from './components/proyectoTable';
+import ClientTable from './components/tableClients';
 
 const Trello = () => {
   const [selectedSprint, setSelectedSprint] = useState<string | null>(null); 
@@ -26,10 +28,15 @@ const Trello = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 mt-10 gap-4">
         <TablesCards />
+        <ProyectoTable sprintNumber={selectedSprint ?? ''}  />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 mt-10 gap-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <TableChartHour sprintNumber={selectedSprint ?? ''} />
           <TableChartPie sprintNumber={selectedSprint ?? ''} />
         </div>
+        <ClientTable sprintNumber={selectedSprint ?? ''} />
       </div>
 
       <Footer />
